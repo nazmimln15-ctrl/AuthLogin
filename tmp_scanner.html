@@ -3,38 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{config('app.name')}} | Login</title>
+  <title>QR Scanner | Login</title>
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="{{asset('adminlte/plugins/fontawesome-free/css/all.min.css')}}">
+  <link rel="stylesheet" href="http://127.0.0.1:8000/adminlte/plugins/fontawesome-free/css/all.min.css">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="{{asset('adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css')}}">
+  <link rel="stylesheet" href="http://127.0.0.1:8000/adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
   <!-- Theme style -->
-  <link rel="stylesheet" href="{{asset('adminlte/dist/css/adminlte.min.css')}}">
+  <link rel="stylesheet" href="http://127.0.0.1:8000/adminlte/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <a href="{{asset('adminlte/index2.html')}}"><b>Login In</b></a>
+    <a href="http://127.0.0.1:8000/adminlte/index2.html"><b>Login In</b></a>
   </div>
   <!-- /.login-logo -->
   <div class="card">
     <div class="card-body login-card-body">
 
-    @if (session('failed'))
-        <div class="alert alert-danger">{{ session('failed') }}</div>
-    @endif
-    
+        
       <p class="login-box-msg">Sign in to start your session</p>
 
       <form action="/login" method="post">
-        @csrf
-        @error('email')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
-        <div class="input-group mb-3 ">
+        <input type="hidden" name="_token" value="qfNpoQSG28NRz5lxHOFCtvYZ6fJH2GE4d4OunCs4" autocomplete="off">                <div class="input-group mb-3 ">
           <input type="email" name="email" class="form-control" placeholder="Email">
           <div class="input-group-append">
             <div class="input-group-text">
@@ -42,10 +35,7 @@
             </div>
           </div>
         </div>
-        @error('password')
-            <small class="text-danger">{{ $message }}</small>
-        @enderror
-        <div class="input-group mb-3 ">
+                <div class="input-group mb-3 ">
           <input type="password" name="password" class="form-control" placeholder="Password" id="password">
           <div class="input-group-append show-password">
             <div class="input-group-text">
@@ -94,11 +84,11 @@
 <!-- /.login-box -->
 
 <!-- jQuery -->
-<script src="{{asset('adminlte/plugins/jquery/jquery.min.js')}}"></script>
+<script src="http://127.0.0.1:8000/adminlte/plugins/jquery/jquery.min.js"></script>
 <!-- Bootstrap 4 -->
-<script src="{{asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+<script src="http://127.0.0.1:8000/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
-<script src="{{asset('adminlte/dist/js/adminlte.min.js')}}"></script>
+<script src="http://127.0.0.1:8000/adminlte/dist/js/adminlte.min.js"></script>
 
 <script>
     $('.show-password').on('click', function() {
