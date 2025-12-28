@@ -31,6 +31,17 @@
 
       <form action="/register" method="post">
         @csrf
+        @error('no_induk')
+            <small class="text-danger">{{ $message }}</small>
+        @enderror
+        <div class="input-group mb-3 ">
+          <input type="text" name="no_induk" class="form-control" placeholder="NIDN/NIM" value="{{old('no_induk')}}">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas "></span>
+            </div>
+          </div>
+        </div>
         @error('name')
             <small class="text-danger">{{ $message }}</small>
         @enderror

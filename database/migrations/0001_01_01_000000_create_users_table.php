@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('status', ['verify', 'active', 'banned']);
             $table->string('password');
             $table->rememberToken();
+            $table->string('no_induk');
             $table->timestamps();
         });
 

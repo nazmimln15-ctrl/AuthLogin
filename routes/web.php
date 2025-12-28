@@ -19,11 +19,11 @@ Route::get('/', function () {
 
 
 // Dosen attendance routes
-Route::prefix('dosen')->group(function () {
-    Route::get('absensi', [DosenAttendanceController::class, 'index']);
-    Route::get('absensi/{course}', [DosenAttendanceController::class, 'show']);
-    Route::get('absensi/{course}/export', [DosenAttendanceController::class, 'exportXlsx']);
-});
+// Route::prefix('dosen')->group(function () {
+//     Route::get('absensi', [DosenAttendanceController::class, 'index']);
+//     Route::get('absensi/{course}', [DosenAttendanceController::class, 'show']);
+//     Route::get('absensi/{course}/export', [DosenAttendanceController::class, 'exportXlsx']);
+// });
 
 
 

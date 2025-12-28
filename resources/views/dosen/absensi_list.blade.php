@@ -1,6 +1,7 @@
 @extends('layout.master')
 
 @section('content')
+
     <div class="content-wrapper">
         <div class="container">
             <h3>Absensi: {{ $session->course_id }} (token: {{ $session->token }})</h3>

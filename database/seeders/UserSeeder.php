@@ -19,6 +19,7 @@ class UserSeeder extends Seeder
             'role' => 'admin',
             'status' => 'active',
             'password' => 'admin',
+            'no_induk' => '00.00.0.0000',
         ]);
         User::create([
             'name' => 'dosen',
@@ -26,6 +27,7 @@ class UserSeeder extends Seeder
             'role' => 'dosen',
             'status' => 'active',
             'password' => 'dosen',
+            'no_induk' => '21098712',
         ]);
         User::create([
             'name' => 'mahasiswa',
@@ -33,6 +35,7 @@ class UserSeeder extends Seeder
             'role' => 'mahasiswa',
             'status' => 'active',
             'password' => 'mahasiswa',
+            'no_induk' => '23.01.0.0001',
         ]);
 
     }
