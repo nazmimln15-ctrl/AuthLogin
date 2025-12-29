@@ -7,8 +7,9 @@
             <ul>
                 @forelse($sessions as $s)
                     <li>
-                        <a href="{{ url('dosen/absensi/' . $s->id) }}">{{ $s->course_id }} - token: {{ $s->token }}</a>
+                        <a href="{{ url('absensi/' . $s->id) }}">{{ $s->course_id }} - token: {{ $s->token }}</a>
                     </li>
+                    
                 @empty
                     <li>Tidak ada sesi absensi</li>
                 @endforelse

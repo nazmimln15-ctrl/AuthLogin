@@ -1,9 +1,10 @@
 @extends('layout.master')
 
 @section('content')
-    <section class="content">
-        <div class="container-fluid">
-            <div class="content-wrapper">
+    <div class="content-wrapper">
+        <section class="content">
+            <div class="container-fluid">
+
                 <h3>Buat Sesi Absensi</h3>
                 <form method="POST" action="{{ route('attendance.store') }}">
                     @csrf
@@ -22,6 +23,6 @@
                     <button class="btn btn-primary">Buat Sesi & Tampilkan QR</button>
                 </form>
             </div>
-        </div>
+    </div>
     </section>
 @endsection

@@ -10,7 +10,13 @@
           <div class="user-panel mt-3 pb-3 mb-3 d-flex">
           
               <div class="info">
-                  <a href="#" class="d-block">{{ auth()->user()->name }}</a>
+                 @if (auth()->user()->role == 'admin')
+                <a href="/dashboard" class="d-block">{{ auth()->user()->name }}</a>
+                 @elseif (auth()->user()->role == 'dosen')
+                <a href="/dashboard" class="d-block">{{ auth()->user()->name }}</a>
+                 @elseif (auth()->user()->role == 'mahasiswa')
+                <a href="/mahasiswa" class="d-block">{{ auth()->user()->name }}</a>
+                 @endif
               </div>
           </div>
 
@@ -31,8 +37,7 @@
           <nav class="mt-2">
               <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                   data-accordion="false">
-                  <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
+                  <!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
                   @if (auth()->user()->role == 'admin')
                       <li class="nav-item">
                           <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
@@ -43,7 +48,7 @@
                           </a>
                       </li>
                       <li class="nav-item">
-                          <a href="/user" class="nav-link" {{ request()->is('user') ? 'active' : '' }}>
+                          <a href="/admin/users" class="nav-link" {{ request()->is('user') ? 'active' : '' }}>
                               <i class="nav-icon fas fa-user"></i>
                               <p>
                                   Users
@@ -64,6 +69,14 @@
                               <i class="nav-icon fas fa-user"></i>
                               <p>
                                   Generate QR
+                              </p>
+                          </a>
+                      </li>
+                      <li class="nav-item">
+                          <a href="/dosen/sessions" class="nav-link {{ request()->is('dosen/sessions') ? 'active' : '' }}">
+                              <i class="nav-icon fas fa-user"></i>
+                              <p>
+                                  QR Code
                               </p>
                           </a>
                       </li>

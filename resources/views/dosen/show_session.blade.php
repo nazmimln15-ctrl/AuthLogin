@@ -1,9 +1,9 @@
 @extends('layout.master')
 
 @section('content')
-    <section class="content">
-        <div class="container-fluid">
-            <div class="content-wrapper">
+    <div class="content-wrapper">
+        <section class="content">
+            <div class="container-fluid">
                 <div class="container text-center">
                     <h3>Sesi Absensi: {{ $session->course_id }}</h3>
                     <p>Token: {{ $session->token }}</p>
@@ -53,6 +53,6 @@
 
                 </div>
             </div>
-        </div>
+    </div>
     </section>
 @endsection

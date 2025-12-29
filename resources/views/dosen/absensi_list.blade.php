@@ -6,7 +6,7 @@
         <div class="container">
             <h3>Absensi: {{ $session->course_id }} (token: {{ $session->token }})</h3>
 
-            <p><a href="{{ url('dosen/absensi/' . $session->id . '/export') }}" class="btn btn-success">Download XLSX</a></p>
+            <p><a href="{{ url('absensi/' . $session->id . '/export') }}" class="btn btn-success">Download XLSX</a></p>
 
             <table class="table table-striped">
                 <thead>
@@ -21,7 +21,7 @@
                         <tr>
                             <td>{{ $r->nim ?? '-' }}</td>
                             <td>{{ $r->name ?? '-' }}</td>
-                            <td>{{ $r->created_at ?? '-' }}</td>
+                            <td>{{ $r->attended_at ?? $r->created_at ?? '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

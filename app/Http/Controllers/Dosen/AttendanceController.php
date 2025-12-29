@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
@@ -16,6 +17,20 @@ class AttendanceController extends Controller
         // List active attendance sessions / courses
         $sessions = DB::table('attendance_sessions')->select('id', 'course_id', 'token', 'starts_at')->get();
         return view('dosen.absensi', compact('sessions'));
+    }
+
+    // Show all sessions created by the authenticated dosen (QR list)
+    public function sessionList()
+    {
+        $userId = Auth::id();
+
+        $sessions = DB::table('attendance_sessions')
+            ->where('instructor_id', $userId)
+            ->select('id', 'course_id', 'token', 'starts_at', 'ends_at')
+            ->orderBy('starts_at', 'desc')
+            ->get();
+
+        return view('dosen.session_list', ['sessions' => $sessions]);
     }
 
     // Show attendance list for a course
@@ -29,7 +44,7 @@ class AttendanceController extends Controller
         $rows = DB::table('attendances')
             ->where('attendance_session_id', $sessionId)
             ->leftJoin('users', 'attendances.user_id', '=', 'users.id')
-            ->select('attendances.*', 'users.name', 'users.email')
+            ->select('attendances.*', 'users.no_induk as nim', 'users.name', 'users.email', 'attendances.attended_at', 'attendances.created_at')
             ->get();
 
         return view('dosen.absensi_list', ['session' => $session, 'rows' => $rows]);
@@ -44,7 +59,7 @@ class AttendanceController extends Controller
         $rows = DB::table('attendances')
             ->where('attendance_session_id', $sessionId)
             ->leftJoin('users', 'attendances.user_id', '=', 'users.id')
-            ->select('users.id as nim', 'users.name', 'attendances.attended_at')
+            ->select('users.no_induk as nim', 'users.name', 'attendances.attended_at', 'attendances.created_at')
             ->get();
 
         $spreadsheet = new Spreadsheet();

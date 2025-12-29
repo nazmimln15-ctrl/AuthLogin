@@ -30,7 +30,7 @@
                     <div class="alert alert-danger">{{ session('failed') }}</div>
                 @endif
 
-                <p class="login-box-msg">Please verify your account!</p>
+                <p class="login-box-msg" style="item-align:center">Please verify your account!</p>
                 <form action="/verify" method="post">
                     @csrf
                     <input type="hidden" value="register" name="type">

@@ -52,7 +52,7 @@
                         <!-- /.col -->
                     </div>
                 </form>
-                <a href="#!">Resend OTP</a>
+                <a href="/verify">Resend OTP</a>
                 </p>
             </div>
             <!-- /.login-card-body -->
