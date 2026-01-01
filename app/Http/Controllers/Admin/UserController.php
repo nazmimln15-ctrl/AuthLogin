@@ -6,13 +6,30 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserController extends Controller
 {
     public function index()
     {
-        $dosen = User::where('role', 'dosen')->orderBy('name')->get();
-        $mahasiswa = User::where('role', 'mahasiswa')->orderBy('name')->get();
+        $base = url('/api/admin/users');
+
+        $token = session('api_token');
+        if (! $token && Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+            $token = $user->createToken('frontend')->plainTextToken;
+            session(['api_token' => $token]);
+        }
+        
+
+        $dosenResp = Http::withToken($token)->get($base, ['role' => 'dosen']);
+        $mahasiswaResp = Http::withToken($token)->get($base, ['role' => 'mahasiswa']);
+
+        $dosen = $dosenResp->successful() ? $dosenResp->json('data') : collect();
+        $mahasiswa = $mahasiswaResp->successful() ? $mahasiswaResp->json('data') : collect();
 
         return view('admin.user', [
             'dosen' => $dosen,
@@ -27,56 +44,41 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'role' => 'required|in:admin,dosen,mahasiswa',
-            'no_induk' => 'nullable|string|max:50',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role' => $data['role'],
-            'no_induk' => $data['no_induk'] ?? null,
-            'password' => Hash::make($data['password']),
-            'status' => 'active',
-        ]);
-
-        return redirect()->route('admin.users.index')->with('success', 'User created.');
+        $data = $request->all();
+        $token = session('api_token');
+        $resp = Http::withToken($token)->post(url('/api/admin/users'), $data);
+        if ($resp->successful()) {
+            return redirect()->route('admin.users.index')->with('success', 'User created.');
+        }
+        return back()->with('failed', 'API error: ' . $resp->body());
     }
 
     public function edit(User $user)
     {
-        return view('admin.user_edit', ['user' => $user]);
+        $token = session('api_token');
+        $resp = Http::withToken($token)->get(url('/api/admin/users/' . $user->id));
+        $userData = $resp->successful() ? $resp->json('data') : $user->toArray();
+        return view('admin.user_edit', ['user' => (object) $userData]);
     }
 
     public function update(Request $request, User $user)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,dosen,mahasiswa',
-            'no_induk' => 'nullable|string|max:50',
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
-
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->role = $data['role'];
-        $user->no_induk = $data['no_induk'] ?? null;
-        if (! empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
+        $data = $request->all();
+        $token = session('api_token');
+        $resp = Http::withToken($token)->put(url('/api/admin/users/' . $user->id), $data);
+        if ($resp->successful()) {
+            return redirect()->route('admin.users.index')->with('success', 'User updated.');
         }
-        $user->save();
-
-        return redirect()->route('admin.users.index')->with('success', 'User updated.');
+        return back()->with('failed', 'API error: ' . $resp->body());
     }
 
     public function destroy(User $user)
     {
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User deleted.');
+        $token = session('api_token');
+        $resp = Http::withToken($token)->delete(url('/api/admin/users/' . $user->id));
+        if ($resp->successful()) {
+            return redirect()->route('admin.users.index')->with('success', 'User deleted.');
+        }
+        return back()->with('failed', 'API error: ' . $resp->body());
     }
 }

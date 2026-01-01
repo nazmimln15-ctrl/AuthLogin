@@ -8,14 +8,22 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class AttendanceController extends Controller
 {
     // Show list of courses for dosen (simple implementation)
     public function index()
     {
-        // List active attendance sessions / courses
-        $sessions = DB::table('attendance_sessions')->select('id', 'course_id', 'token', 'starts_at')->get();
+        $token = session('api_token');
+        if (! $token && Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+            $token = $user->createToken('frontend')->plainTextToken;
+            session(['api_token' => $token]);
+        }
+        $resp = Http::withToken($token)->get(url('/api/admin/sessions'));
+        $sessions = $resp->successful() ? $resp->json('data') : collect();
         return view('dosen.absensi', compact('sessions'));
     }
 
@@ -23,44 +31,32 @@ class AttendanceController extends Controller
     public function sessionList()
     {
         $userId = Auth::id();
-
-        $sessions = DB::table('attendance_sessions')
-            ->where('instructor_id', $userId)
-            ->select('id', 'course_id', 'token', 'starts_at', 'ends_at')
-            ->orderBy('starts_at', 'desc')
-            ->get();
-
+        $token = session('api_token');
+        $resp = Http::withToken($token)->get(url('/api/admin/sessions'), ['instructor_id' => $userId]);
+        $sessions = $resp->successful() ? $resp->json('data') : collect();
         return view('dosen.session_list', ['sessions' => $sessions]);
     }
 
     // Show attendance list for a course
     public function show($sessionId)
     {
-        $session = DB::table('attendance_sessions')->where('id', $sessionId)->first();
-        if (! $session) {
-            abort(404);
-        }
-
-        $rows = DB::table('attendances')
-            ->where('attendance_session_id', $sessionId)
-            ->leftJoin('users', 'attendances.user_id', '=', 'users.id')
-            ->select('attendances.*', 'users.no_induk as nim', 'users.name', 'users.email', 'attendances.attended_at', 'attendances.created_at')
-            ->get();
-
-        return view('dosen.absensi_list', ['session' => $session, 'rows' => $rows]);
+        $token = session('api_token');
+        $resp = Http::withToken($token)->get(url('/api/admin/sessions/' . $sessionId . '/attendances'));
+        if (! $resp->successful()) abort(404);
+        $data = $resp->json('data');
+        $session = $data['session'] ?? null;
+        $rows = $data['rows'] ?? [];
+        return view('dosen.absensi_list', ['session' => (object) $session, 'rows' => $rows]);
     }
 
     // Export to xlsx
     public function exportXlsx($sessionId)
     {
-        $session = DB::table('attendance_sessions')->where('id', $sessionId)->first();
-        if (! $session) abort(404);
-
-        $rows = DB::table('attendances')
-            ->where('attendance_session_id', $sessionId)
-            ->leftJoin('users', 'attendances.user_id', '=', 'users.id')
-            ->select('users.no_induk as nim', 'users.name', 'attendances.attended_at', 'attendances.created_at')
-            ->get();
+        $token = session('api_token');
+        $resp = Http::withToken($token)->get(url('/api/admin/sessions/' . $sessionId . '/attendances'));
+        if (! $resp->successful()) abort(404);
+        $data = $resp->json('data');
+        $rows = $data['rows'] ?? [];
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -70,9 +66,9 @@ class AttendanceController extends Controller
 
         $r = 2;
         foreach ($rows as $row) {
-            $sheet->setCellValue('A' . $r, $row->nim ?? '');
-            $sheet->setCellValue('B' . $r, $row->name ?? '');
-            $sheet->setCellValue('C' . $r, $row->attended_at ?? '');
+            $sheet->setCellValue('A' . $r, $row['nim'] ?? '');
+            $sheet->setCellValue('B' . $r, $row['name'] ?? '');
+            $sheet->setCellValue('C' . $r, $row['attended_at'] ?? '');
             $r++;
         }
 

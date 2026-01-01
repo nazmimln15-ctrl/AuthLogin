@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\AttendanceSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+
 
 class AttendanceController extends Controller
 {
@@ -22,29 +24,34 @@ class AttendanceController extends Controller
             'ends_at' => ['nullable', 'date'],
         ]);
 
-        $token = Str::uuid()->toString();
-
-        $session = AttendanceSession::create([
-            'course_id' => $data['course_id'],
-            'instructor_id' => Auth::id(),
-            'token' => $token,
-            'starts_at' => $data['starts_at'] ?? null,
-            'ends_at' => $data['ends_at'] ?? null,
-            'metadata' => null,
-        ]);
-
-        return redirect()->route('attendance.show', $session->id);
+        $token = session('api_token');
+        if (! $token && Auth::check()) {
+            /** @var User $user */
+            $user = Auth::user();
+            $token = $user->createToken('frontend')->plainTextToken;
+            session(['api_token' => $token]);
+        }
+        $resp = Http::withToken($token)->post(url('/api/admin/sessions'), $data);
+        if ($resp->successful()) {
+            $session = $resp->json('data');
+            return redirect()->route('attendance.show', $session['id']);
+        }
+        return back()->with('failed', 'API error: ' . $resp->body());
     }
 
     public function show(AttendanceSession $session)
     {
-        // QR payload includes token, course_id, timestamp
-        $payload = json_encode([
-            'session_token' => $session->token,
-            'course_id' => $session->course_id,
-            'starts_at' => optional($session->starts_at)->toDateTimeString(),
-        ]);
-
-        return view('dosen.show_session', compact('session', 'payload'));
+        $token = session('api_token');
+        $resp = Http::withToken($token)->get(url('/api/admin/sessions/' . $session->id));
+        if ($resp->successful()) {
+            $sessionData = $resp->json('data');
+            $payload = json_encode([
+                'session_token' => $sessionData['token'] ?? null,
+                'course_id' => $sessionData['course_id'] ?? null,
+                'starts_at' => $sessionData['starts_at'] ?? null,
+            ]);
+            return view('dosen.show_session', ['session' => (object) $sessionData, 'payload' => $payload]);
+        }
+        abort(404);
     }
 }
