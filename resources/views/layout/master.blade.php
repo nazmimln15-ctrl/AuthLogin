@@ -77,6 +77,48 @@
     <script src="{{ asset('adminlte/dist/js/adminlte.js') }}"></script>
     <!-- AdminLTE for demo purposes -->
     <!-- <script src="{{ asset('adminlte/dist/js/demo.js') }}"></script> -->
+    <!-- Axios (global for views that call API endpoints) -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        axios.defaults.withCredentials = true;
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        const _csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (_csrf) axios.defaults.headers.common['X-CSRF-TOKEN'] = _csrf;
+        function ensureCsrf(){
+            return axios.get('/sanctum/csrf-cookie');
+        }
+        // If an API token is stored (from login), use it for Authorization header
+        try {
+            const _token = localStorage.getItem('api_token');
+            if (_token) axios.defaults.headers.common['Authorization'] = 'Bearer ' + _token;
+        } catch(e) {}
+
+        // Attempt to fetch CSRF cookie once at page load (non-blocking)
+        (function(){
+            ensureCsrf().then(() => {
+                console.debug('CSRF cookie obtained');
+            }).catch((e) => {
+                console.warn('Failed to obtain CSRF cookie', e);
+            });
+
+            // Redirect to login on 401 so users can re-authenticate
+            axios.interceptors.response.use(function(resp){ return resp; }, function(err){
+                if (err.response && err.response.status === 401) {
+                    window.location = '/login';
+                }
+                return Promise.reject(err);
+            });
+        })();
+    </script>
+    @if(session('api_token'))
+    <script>
+        try { 
+            const t = "{{ session('api_token') }}";
+            localStorage.setItem('api_token', t);
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + t;
+        } catch(e) {}
+    </script>
+    @endif
     @yield('js')
 </body>
 

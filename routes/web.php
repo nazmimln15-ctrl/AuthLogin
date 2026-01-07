@@ -37,21 +37,19 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::group(['middleware' => ['auth', 'check_role:mahasiswa']], function () {
     Route::get('/verify', [VerificationController::class, 'index']);
-    // Route::get('/send-otp', [VerificationController::class, 'send_otp']);
-    Route::post('/verify', [VerificationController::class, 'store']);
+    // verification POST now handled client-side against the API
     Route::get('/verify/{unique_id}', [VerificationController::class, 'show']);
-    Route::put('/verify/{unique_id}', [VerificationController::class, 'update']);
+    // verification PUT now handled client-side against the API
 });
 
 Route::group(['middleware' => ['auth', 'check_role:mahasiswa', 'check_status']], function () {
     Route::get('/mahasiswa', [MahasiswaController::class, 'index']);
     Route::get('/scanner', [MahasiswaController::class, 'scanner']);
-    Route::post('/scan-result', [ScanController::class, 'result'])->name('scan.result');
+    // scan-result POST is now performed directly from the view to the API
 });
 Route::group(['middleware' => ['auth', 'check_role:admin,dosen']], function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::get('/attendance/create', [AttendanceController::class, 'create'])->name('attendance.create');
-    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/attendance/{session}', [AttendanceController::class, 'show'])->name('attendance.show');
     Route::get('/absensi', [DosenAttendanceController::class, 'index']);
     Route::get('/absensi/{course}', [DosenAttendanceController::class, 'show']);
@@ -63,9 +61,7 @@ Route::group(['middleware' => ['auth', 'check_role:admin']], function () {
     // Admin user management
     Route::get('/admin/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('admin.users.create');
-    Route::post('/admin/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('admin.users.store');
     Route::get('/admin/users/{user}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('admin.users.edit');
-    Route::put('/admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('admin.users.update');
-    Route::delete('/admin/users/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('admin.users.destroy');
+    // create/update/delete now handled via API from views
 });
 Route::get('/logout', [AuthController::class, 'logout']);

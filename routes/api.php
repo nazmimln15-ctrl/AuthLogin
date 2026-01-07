@@ -54,3 +54,8 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::post('verification', [App\Http\Controllers\Backend\VerificationController::class, 'store']);
     Route::put('verification/{unique_id}', [App\Http\Controllers\Backend\VerificationController::class, 'update']);
 });
+
+// Convenience endpoint to return the authenticated user when using token auth.
+Route::middleware('auth:sanctum')->get('me', function (Illuminate\Http\Request $request) {
+    return response()->json(['data' => $request->user()]);
+});

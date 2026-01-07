@@ -30,11 +30,9 @@
                     <div class="alert alert-danger">{{ session('failed') }}</div>
                 @endif
 
-                <form action="/verify/{{$unique_id}}" method="post">
-                    @method('PUT')
-                    @csrf
+                <form id="verify-form">
                     <div class="input-group mb-3 ">
-                        <input type="number" name="otp" class="form-control" placeholder="Enter OTP">
+                        <input type="number" id="otp-input" name="otp" class="form-control" placeholder="Enter OTP">
                         <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-envelope"></span>
@@ -42,17 +40,14 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-8">
-
-                        </div>
-                        <!-- /.col -->
+                        <div class="col-8"></div>
                         <div class="col-4">
                             <button type="submit" class="btn btn-primary btn-block">Submit</button>
                         </div>
-                        <!-- /.col -->
                     </div>
                 </form>
-                <a href="/verify">Resend OTP</a>
+                <a id="resend-link" href="/verify">Resend OTP</a>
+                <div id="verify-msg" class="mt-2"></div>
                 </p>
             </div>
             <!-- /.login-card-body -->
@@ -66,6 +61,27 @@
     <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <!-- AdminLTE App -->
     <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        axios.defaults.withCredentials = true;
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        const _csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (_csrf) axios.defaults.headers.common['X-CSRF-TOKEN'] = _csrf;
+        function ensureCsrf(){ return axios.get('/sanctum/csrf-cookie'); }
+
+        document.getElementById('verify-form').addEventListener('submit', function(e){
+            e.preventDefault();
+            const btn = this.querySelector('button');
+            btn.disabled = true;
+            const otp = document.getElementById('otp-input').value;
+            ensureCsrf().then(() => axios.put('/api/admin/verification/{{ $unique_id }}', { otp: otp }))
+            .then(res => {
+                window.location = '/mahasiswa';
+            }).catch(err => {
+                document.getElementById('verify-msg').textContent = err.response?.data?.message || 'OTP invalid';
+            }).finally(()=> btn.disabled = false);
+        });
+    </script>
 
 </body>
 

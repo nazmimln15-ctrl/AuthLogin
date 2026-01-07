@@ -32,18 +32,7 @@ class VerificationController extends Controller
 
     public function update(Request $request, $unique_id)
     {
-        $token = session('api_token');
-        if (! $token && Auth::check()) {
-            /**  @var User user */
-            $user = Auth::user();
-            $token = $user->createToken('frontend')->plainTextToken;
-            session(['api_token' => $token]);
-        }
-        $resp = Http::withToken($token)->put(url('/api/admin/verification/' . $unique_id), ['otp' => $request->input('otp')]);
-        if ($resp->successful()) {
-            return redirect('/mahasiswa');
-        }
-        return redirect('/verify')->with('failed', 'OTP invalid');
+        abort(404, 'Use API endpoints from the frontend to verify OTP.');
  //       
         // $verify = Verification::where('user_id', Auth::id())
         //     ->where('unique_id', $unique_id)
@@ -67,21 +56,6 @@ class VerificationController extends Controller
 
     public function store(Request $request)
     {
-        $token = session('api_token');
-        if (! $token && Auth::check()) {
-            /**  @var User $user */
-            $user = Auth::user();
-            $token = $user->createToken('frontend')->plainTextToken;
-            session(['api_token' => $token]);
-        }
-        $resp = Http::withToken($token)->post(url('/api/admin/verification'), ['type' => $request->input('type', 'register')]);
-        if ($resp->successful()) {
-            $unique = $resp->json('data.unique_id') ?? null;
-            if ($request->input('type') == 'register' && $unique) {
-                return redirect('/verify/' . $unique);
-            }
-            return back()->with('success', 'Verification sent');
-        }
-        return back()->with('failed', 'API error');
+        abort(404, 'Use API endpoints from the frontend to request verification.');
     }
 }

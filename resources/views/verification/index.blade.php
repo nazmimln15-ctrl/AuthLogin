@@ -31,11 +31,11 @@
                 @endif
 
                 <p class="login-box-msg" style="item-align:center">Please verify your account!</p>
-                <form action="/verify" method="post">
-                    @csrf
+                <form id="send-otp-form">
                     <input type="hidden" value="register" name="type">
                     <button type="submit" class="btn btn-sm btn-primary">Send OTP to your email</button>
                 </form>
+                <div id="otp-msg" class="mt-2"></div>
             </div>
             <!-- /.login-card-body -->
         </div>
@@ -47,6 +47,32 @@
         <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
         <!-- AdminLTE App -->
         <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script>
+            axios.defaults.withCredentials = true;
+            axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+            const _csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (_csrf) axios.defaults.headers.common['X-CSRF-TOKEN'] = _csrf;
+            function ensureCsrf(){ return axios.get('/sanctum/csrf-cookie'); }
+
+            document.getElementById('send-otp-form').addEventListener('submit', function(e){
+                e.preventDefault();
+                const btn = this.querySelector('button');
+                btn.disabled = true;
+                ensureCsrf().then(() => {
+                    return axios.post('/api/admin/verification', { type: 'register' });
+                }).then(res => {
+                    const unique = res.data?.data?.unique_id;
+                    if (unique) {
+                        window.location = '/verify/' + unique;
+                        return;
+                    }
+                    document.getElementById('otp-msg').textContent = 'Verification sent';
+                }).catch(err => {
+                    document.getElementById('otp-msg').textContent = err.response?.data?.message || err.message;
+                }).finally(()=> btn.disabled=false);
+            });
+        </script>
 
 </body>
 

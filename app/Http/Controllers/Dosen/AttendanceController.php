@@ -15,38 +15,21 @@ class AttendanceController extends Controller
     // Show list of courses for dosen (simple implementation)
     public function index()
     {
-        $token = session('api_token');
-        if (! $token && Auth::check()) {
-            /** @var User $user */
-            $user = Auth::user();
-            $token = $user->createToken('frontend')->plainTextToken;
-            session(['api_token' => $token]);
-        }
-        $resp = Http::withToken($token)->get(url('/api/admin/sessions'));
-        $sessions = $resp->successful() ? $resp->json('data') : collect();
-        return view('dosen.absensi', compact('sessions'));
+        // Views fetch sessions via axios on the client side now.
+        return view('dosen.absensi');
     }
 
     // Show all sessions created by the authenticated dosen (QR list)
     public function sessionList()
     {
-        $userId = Auth::id();
-        $token = session('api_token');
-        $resp = Http::withToken($token)->get(url('/api/admin/sessions'), ['instructor_id' => $userId]);
-        $sessions = $resp->successful() ? $resp->json('data') : collect();
-        return view('dosen.session_list', ['sessions' => $sessions]);
+        return view('dosen.session_list');
     }
 
     // Show attendance list for a course
     public function show($sessionId)
     {
-        $token = session('api_token');
-        $resp = Http::withToken($token)->get(url('/api/admin/sessions/' . $sessionId . '/attendances'));
-        if (! $resp->successful()) abort(404);
-        $data = $resp->json('data');
-        $session = $data['session'] ?? null;
-        $rows = $data['rows'] ?? [];
-        return view('dosen.absensi_list', ['session' => (object) $session, 'rows' => $rows]);
+        // Client will fetch attendance list via axios.
+        return view('dosen.absensi_list');
     }
 
     // Export to xlsx
