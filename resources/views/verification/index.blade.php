@@ -4,6 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="api-token" content="{{ session('api_token') }}">
+    <meta name="user-email" content="{{ optional(auth()->user())->email }}">
     <title>{{ config('app.name') }} | Login</title>
 
     <!-- Google Font: Source Sans Pro -->
@@ -29,12 +32,16 @@
                 @if (session('failed'))
                     <div class="alert alert-danger">{{ session('failed') }}</div>
                 @endif
-
                 <p class="login-box-msg" style="item-align:center">Please verify your account!</p>
-                <form id="send-otp-form">
-                    <input type="hidden" value="register" name="type">
-                    <button type="submit" class="btn btn-sm btn-primary">Send OTP to your email</button>
-                </form>
+                
+                    <form id="send-otp-form">
+                        <input type="hidden" value="register" name="type">
+                        <div class="text-center">
+
+                            <button type="submit" c="btn btn-sm btn-primary">Send OTP to your email</button>
+                        </div>
+                    </form> 
+                
                 <div id="otp-msg" class="mt-2"></div>
             </div>
             <!-- /.login-card-body -->
@@ -53,23 +60,44 @@
             axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
             const _csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             if (_csrf) axios.defaults.headers.common['X-CSRF-TOKEN'] = _csrf;
+            const _apiToken = document.querySelector('meta[name="api-token"]')?.getAttribute('content');
+            if (_apiToken) axios.defaults.headers.common['Authorization'] = 'Bearer ' + _apiToken;
             function ensureCsrf(){ return axios.get('/sanctum/csrf-cookie'); }
 
-            document.getElementById('send-otp-form').addEventListener('submit', function(e){
+                document.getElementById('send-otp-form').addEventListener('submit', function(e){
                 e.preventDefault();
                 const btn = this.querySelector('button');
                 btn.disabled = true;
+                document.getElementById('otp-msg').textContent = '';
                 ensureCsrf().then(() => {
-                    return axios.post('/api/admin/verification', { type: 'register' });
+                    const type = this.querySelector('input[name="type"]').value || 'register';
+                    // if register, call public endpoint that accepts email
+                    if (type === 'register') {
+                        const email = document.querySelector('meta[name="user-email"]').getAttribute('content') || null;
+                        if (! email) {
+                            document.getElementById('otp-msg').textContent = 'Email not available in session';
+                            btn.disabled = false;
+                            return Promise.reject(new Error('Email not available'));
+                        }
+                        return axios.post('/api/verification-public', { type: type, email: email });
+                    }
+                    return axios.post('/api/admin/verification', { type: type });
                 }).then(res => {
-                    const unique = res.data?.data?.unique_id;
-                    if (unique) {
-                        window.location = '/verify/' + unique;
+                    if (res && res.data && res.data.success) {
+                        const unique = res.data.data?.unique_id;
+                        if (unique) {
+                            window.location = '/verify/' + unique;
+                            return;
+                        }
+                        document.getElementById('otp-msg').textContent = 'Verification sent';
                         return;
                     }
-                    document.getElementById('otp-msg').textContent = 'Verification sent';
+                    // Unexpected response shape
+                    document.getElementById('otp-msg').textContent = 'Unexpected response: ' + JSON.stringify(res.data || res);
                 }).catch(err => {
-                    document.getElementById('otp-msg').textContent = err.response?.data?.message || err.message;
+                    const msg = err.response?.data?.message || err.response?.data || err.message || String(err);
+                    document.getElementById('otp-msg').textContent = 'Error: ' + JSON.stringify(msg);
+                    console.error('Verification error', err);
                 }).finally(()=> btn.disabled=false);
             });
         </script>

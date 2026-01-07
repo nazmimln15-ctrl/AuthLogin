@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="api-token" content="{{ session('api_token') }}">
     <title>{{ config('app.name') }} | Login</title>
 
     <!-- Google Font: Source Sans Pro -->
@@ -67,18 +69,33 @@
         axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         const _csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
         if (_csrf) axios.defaults.headers.common['X-CSRF-TOKEN'] = _csrf;
+        const _apiToken = document.querySelector('meta[name="api-token"]')?.getAttribute('content');
+        if (_apiToken) axios.defaults.headers.common['Authorization'] = 'Bearer ' + _apiToken;
         function ensureCsrf(){ return axios.get('/sanctum/csrf-cookie'); }
 
         document.getElementById('verify-form').addEventListener('submit', function(e){
             e.preventDefault();
             const btn = this.querySelector('button');
             btn.disabled = true;
+            document.getElementById('verify-msg').textContent = '';
             const otp = document.getElementById('otp-input').value;
-            ensureCsrf().then(() => axios.put('/api/admin/verification/{{ $unique_id }}', { otp: otp }))
+            ensureCsrf().then(() => {
+                // if api token available, use authenticated admin endpoint; otherwise use public verify endpoint
+                const url = (document.querySelector('meta[name="api-token"]')?.getAttribute('content'))
+                    ? '/api/admin/verification/{{ $unique_id }}'
+                    : '/api/verification-public/{{ $unique_id }}';
+                return axios.put(url, { otp: otp });
+            })
             .then(res => {
-                window.location = '/mahasiswa';
+                if (res && res.data && res.data.success) {
+                    window.location = '/mahasiswa';
+                    return;
+                }
+                document.getElementById('verify-msg').textContent = 'Unexpected response: ' + JSON.stringify(res.data || res);
             }).catch(err => {
-                document.getElementById('verify-msg').textContent = err.response?.data?.message || 'OTP invalid';
+                const msg = err.response?.data?.message || err.response?.data || err.message || 'OTP invalid';
+                document.getElementById('verify-msg').textContent = 'Error: ' + JSON.stringify(msg);
+                console.error('Verify error', err);
             }).finally(()=> btn.disabled = false);
         });
     </script>

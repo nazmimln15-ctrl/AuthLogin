@@ -27,6 +27,11 @@ Route::post('token', function (Request $request) {
 */
 
 // Use Sanctum token auth for API endpoints. Ensure laravel/sanctum is installed and configured.
+// Public verification endpoint for sending OTP to an email (used during registration)
+Route::post('verification-public', [App\Http\Controllers\Backend\VerificationController::class, 'storePublic']);
+// Public verification check endpoint (verify OTP without auth)
+Route::put('verification-public/{unique_id}', [App\Http\Controllers\Backend\VerificationController::class, 'updatePublic']);
+
 Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     // Users
     Route::get('users', [App\Http\Controllers\Backend\UserController::class, 'index']);
